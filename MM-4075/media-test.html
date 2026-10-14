@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>getUserMedia test (MM-4075)</title>
+<style>
+  body{font-family:-apple-system,system-ui,sans-serif;padding:16px;max-width:480px;margin:0 auto}
+  button{font-size:18px;padding:14px 20px;margin:6px 0;width:100%;border-radius:8px}
+  video{width:100%;background:#000;border-radius:8px;margin-top:8px}
+  #log{white-space:pre-wrap;background:#f4f4f4;padding:10px;font-size:13px;border-radius:8px;margin-top:12px}
+</style>
+</head>
+<body>
+  <h2>getUserMedia media test</h2>
+  <p>MM-4075. Each button requests a different media type so you can test camera, mic, and combined. The error name is logged on deny.</p>
+  <button onclick="go({video:true})">Camera only (video)</button>
+  <button onclick="go({audio:true})">Microphone only (audio) — iOS no-crash check</button>
+  <button onclick="go({video:true,audio:true})">Camera + mic</button>
+  <button onclick="stop()">Stop</button>
+  <video id="v" autoplay playsinline muted></video>
+  <div id="log"></div>
+<script>
+  var stream;
+  function log(m){ document.getElementById('log').textContent += m + "\n"; }
+  function stop(){ if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; log('stopped'); } }
+  async function go(c){
+    stop();
+    log('Requesting ' + JSON.stringify(c) + ' ...');
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      log('ERROR: getUserMedia not available (not a secure context?)');
+      return;
+    }
+    try{
+      stream = await navigator.mediaDevices.getUserMedia(c);
+      document.getElementById('v').srcObject = stream;
+      log('GRANTED: tracks = ' + stream.getTracks().map(function(t){return t.kind;}).join(', '));
+    }catch(e){
+      log('ERROR: ' + e.name + ' - ' + e.message);
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MM-4075 camera/mic test pages</title>
+<style>
+  body{font-family:-apple-system,system-ui,sans-serif;padding:16px;max-width:480px;margin:0 auto}
+  a.card{display:block;padding:16px;margin:10px 0;border:1px solid #ddd;border-radius:10px;text-decoration:none;color:#111}
+  a.card b{font-size:18px}
+  a.card span{display:block;color:#555;font-size:14px;margin-top:4px}
+</style>
+</head>
+<body>
+  <h2>MM-4075 test pages</h2>
+  <p>Linked-site getUserMedia tests for the legacy app in-app browser.</p>
+  <a class="card" href="webcam-test.html"><b>Webcam.js camera test</b><span>AC literal: start camera, capture photo, deny shows "Webcam.js Error".</span></a>
+  <a class="card" href="media-test.html"><b>getUserMedia media test</b><span>Camera / mic / camera+mic. Mic = iOS no-crash and Android deny-other check.</span></a>
+</body>
+</html>

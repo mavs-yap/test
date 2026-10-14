@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webcam.js camera test (MM-4075)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+<style>
+  body{font-family:-apple-system,system-ui,sans-serif;padding:16px;max-width:480px;margin:0 auto}
+  button{font-size:18px;padding:14px 20px;margin:6px 0;width:100%;border-radius:8px}
+  #camera,#results img{max-width:100%}
+  #log{white-space:pre-wrap;background:#f4f4f4;padding:10px;font-size:13px;border-radius:8px;margin-top:12px}
+</style>
+</head>
+<body>
+  <h2>Webcam.js camera test</h2>
+  <p>MM-4075 — linked-site getUserMedia via the webcam.js library. Tap <b>Start camera</b> to trigger the OS camera permission prompt, then <b>Capture photo</b>.</p>
+  <div id="camera"></div>
+  <button onclick="start()">Start camera</button>
+  <button onclick="snap()">Capture photo</button>
+  <div id="results"></div>
+  <div id="log"></div>
+<script>
+  function log(m){ document.getElementById('log').textContent += m + "\n"; }
+  Webcam.on('error', function(err){ log('Webcam.js Error: ' + err); });
+  Webcam.on('live',  function(){ log('Camera live'); });
+  function start(){
+    log('Requesting camera...');
+    Webcam.set({ width:320, height:240, image_format:'jpeg', jpeg_quality:90 });
+    Webcam.attach('#camera');
+  }
+  function snap(){
+    Webcam.snap(function(data_uri){
+      document.getElementById('results').innerHTML = '<img src="'+data_uri+'"/>';
+      log('Captured photo OK');
+    });
+  }
+</script>
+</body>
+</html>
