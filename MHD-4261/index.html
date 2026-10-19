@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Course Repro (MHD-4261)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.5; }
+  h1 { font-size: 1.25rem; }
+  .card { border: 1px solid #ccc; border-radius: 10px; padding: 16px; margin: 14px 0; }
+  button, a.btn { display: inline-block; font-size: 1rem; padding: 12px 16px; border-radius: 8px;
+    border: 1px solid #0a66c2; background: #0a66c2; color: #fff; text-decoration: none; margin: 6px 0; cursor: pointer; }
+  button[disabled] { opacity: .5; }
+  .muted { color: #666; font-size: .85rem; }
+  .ok { color: #137333; font-weight: 600; }
+  .bad { color: #c5221f; font-weight: 600; }
+  .warn { background: #fde7e9; color: #c5221f; padding: 10px; border-radius: 8px; font-weight: 600; }
+  code { background: rgba(127,127,127,.15); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <h1>Code of Conduct — Course (QA repro for MHD-4261)</h1>
+  <p class="muted">Stand-in for the learning-platform SCORM course. Progress is held in the page (in memory), exactly like a live course session. Follow the steps in order.</p>
+
+  <div id="reloadBanner" class="warn" hidden>⚠️ This page RELOADED since you started. In a real course this means your progress is lost. (Tab loads this session: <span id="loadCount">1</span>)</div>
+
+  <div class="card">
+    <strong>Session</strong><br>
+    ID: <code id="sid">—</code><br>
+    <span class="muted">If this ID changes after you come back from the document, the course tab was reloaded.</span>
+  </div>
+
+  <div class="card">
+    <strong>Step 1.</strong> Complete the training content.<br>
+    <button id="step1">Mark steps complete</button>
+    <div id="step1status" class="muted">Not done yet.</div>
+  </div>
+
+  <div class="card">
+    <strong>Step 2.</strong> Open the Code of Conduct document (opens in a <em>new tab</em>), read it, then come back to this page.<br>
+    <a class="btn" id="docLink" href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" rel="noopener">Open Code of Conduct document ↗</a>
+  </div>
+
+  <div class="card">
+    <strong>Step 3.</strong> Mark the course as complete.<br>
+    <button id="complete">Mark as complete</button>
+    <div id="result" class="muted">Waiting…</div>
+  </div>
+
+<script>
+  // In-memory progress — mirrors a live SCORM runtime. Lost if the tab is discarded/reloaded.
+  let progressDone = false;
+  const sid = Math.random().toString(36).slice(2, 8).toUpperCase();
+  document.getElementById('sid').textContent = sid;
+
+  // Count loads within THIS tab session to detect a reload on return.
+  let loads = 1;
+  try {
+    loads = (parseInt(sessionStorage.getItem('qa_loads') || '0', 10) || 0) + 1;
+    sessionStorage.setItem('qa_loads', String(loads));
+  } catch (e) {}
+  document.getElementById('loadCount').textContent = loads;
+  if (loads > 1) document.getElementById('reloadBanner').hidden = false;
+
+  document.getElementById('step1').addEventListener('click', function () {
+    progressDone = true;
+    this.disabled = true;
+    document.getElementById('step1status').innerHTML = '<span class="ok">Steps complete ✓</span>';
+  });
+
+  document.getElementById('complete').addEventListener('click', function () {
+    const r = document.getElementById('result');
+    if (progressDone) {
+      r.innerHTML = '<span class="ok">✅ Completed. Your progress survived — this is the GOOD outcome.</span>';
+    } else {
+      r.innerHTML = '<span class="bad">❌ Cannot complete — progress was lost. The course tab reloaded when you returned (BUG REPRODUCED).</span>';
+    }
+  });
+
+  // If the tab was restored from bfcache (progress intact), JS does not re-run, so progressDone persists.
+  // If it was discarded and reloaded, this whole script re-runs and progressDone resets to false.
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      // Restored from cache — good case; nothing to reset.
+    }
+  });
+</script>
+</body>
+</html>
