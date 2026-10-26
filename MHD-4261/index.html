@@ -21,14 +21,14 @@
 </head>
 <body>
   <h1>Code of Conduct — Course (QA repro for MHD-4261)</h1>
-  <p class="muted">Stand-in for the learning-platform SCORM course. Progress is held in the page (in memory), exactly like a live course session. Follow the steps in order.</p>
+  <p class="muted">Stand-in for the learning-platform SCORM course. Progress is held in the page (in memory), exactly like a live course session. The document opens from the SAME site as this page, so it exercises the app's new-window handling the way the real course does. Follow the steps in order.</p>
 
-  <div id="reloadBanner" class="warn" hidden>⚠️ This page RELOADED since you started. In a real course this means your progress is lost. (Tab loads this session: <span id="loadCount">1</span>)</div>
+  <div id="reloadBanner" class="warn" hidden>⚠️ This course page RELOADED since you started. Your in-memory progress is lost. (Tab loads this session: <span id="loadCount">1</span>)</div>
 
   <div class="card">
     <strong>Session</strong><br>
     ID: <code id="sid">—</code><br>
-    <span class="muted">If this ID changes after you come back from the document, the course tab was reloaded.</span>
+    <span class="muted">If this ID changes after you come back from the document, the course page was reloaded or replaced.</span>
   </div>
 
   <div class="card">
@@ -38,8 +38,10 @@
   </div>
 
   <div class="card">
-    <strong>Step 2.</strong> Open the Code of Conduct document (opens in a <em>new tab</em>), read it, then come back to this page.<br>
-    <a class="btn" id="docLink" href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" rel="noopener">Open Code of Conduct document ↗</a>
+    <strong>Step 2.</strong> Open the Code of Conduct document, read it, then come back to this course page. Try BOTH buttons — real SCORM courses usually use the second one (<code>window.open</code>):<br>
+    <a class="btn" id="docLink" href="document.html" target="_blank" rel="opener">A) Open document — link (target=_blank) ↗</a><br>
+    <button id="docPopup">B) Open document — window.open() ↗</button>
+    <div id="popupStatus" class="muted"></div>
   </div>
 
   <div class="card">
@@ -48,13 +50,19 @@
     <div id="result" class="muted">Waiting…</div>
   </div>
 
+  <div class="card muted">
+    <strong>What a PASS vs FAIL looks like in the Mumba app:</strong><br>
+    PASS — after reading the document you can get back to THIS page (same Session ID, no red banner) and Step 3 confirms your progress survived.<br>
+    FAIL (the reported bug) — the document opens in the in-app browser, the Back button does nothing, and the only way out is the X, which drops you out and this page has reloaded / lost progress (red banner, new Session ID, Step 3 says progress lost).
+  </div>
+
 <script>
-  // In-memory progress — mirrors a live SCORM runtime. Lost if the tab is discarded/reloaded.
+  // In-memory progress — mirrors a live SCORM runtime. Lost if the page is discarded/reloaded/replaced.
   let progressDone = false;
   const sid = Math.random().toString(36).slice(2, 8).toUpperCase();
   document.getElementById('sid').textContent = sid;
 
-  // Count loads within THIS tab session to detect a reload on return.
+  // Count loads within THIS tab session to detect a reload/replace on return.
   let loads = 1;
   try {
     loads = (parseInt(sessionStorage.getItem('qa_loads') || '0', 10) || 0) + 1;
@@ -69,20 +77,22 @@
     document.getElementById('step1status').innerHTML = '<span class="ok">Steps complete ✓</span>';
   });
 
+  document.getElementById('docPopup').addEventListener('click', function () {
+    var w = window.open('document.html', '_blank');
+    var s = document.getElementById('popupStatus');
+    if (!w) {
+      s.innerHTML = '<span class="bad">window.open() was blocked.</span>';
+    } else {
+      s.innerHTML = 'Opened via window.open(). Read it, then come back to this page.';
+    }
+  });
+
   document.getElementById('complete').addEventListener('click', function () {
     const r = document.getElementById('result');
     if (progressDone) {
       r.innerHTML = '<span class="ok">✅ Completed. Your progress survived — this is the GOOD outcome.</span>';
     } else {
-      r.innerHTML = '<span class="bad">❌ Cannot complete — progress was lost. The course tab reloaded when you returned (BUG REPRODUCED).</span>';
-    }
-  });
-
-  // If the tab was restored from bfcache (progress intact), JS does not re-run, so progressDone persists.
-  // If it was discarded and reloaded, this whole script re-runs and progressDone resets to false.
-  window.addEventListener('pageshow', function (e) {
-    if (e.persisted) {
-      // Restored from cache — good case; nothing to reset.
+      r.innerHTML = '<span class="bad">❌ Cannot complete — progress was lost. The course page reloaded/was replaced when you returned (BUG REPRODUCED).</span>';
     }
   });
 </script>

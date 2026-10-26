@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code of Conduct (QA repro document)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.6; max-width: 680px; }
+  h1 { font-size: 1.25rem; }
+  .note { background: #e8f0fe; color: #1a3d7c; padding: 12px; border-radius: 8px; margin: 14px 0; }
+  button { font-size: 1rem; padding: 12px 16px; border-radius: 8px; border: 1px solid #0a66c2; background: #0a66c2; color: #fff; cursor: pointer; margin: 6px 0; }
+  .muted { color: #666; font-size: .85rem; }
+  p { margin: 10px 0; }
+</style>
+</head>
+<body>
+  <h1>Code of Conduct</h1>
+  <div class="note">
+    This is the document that opens in a new tab from the course. It is hosted on the SAME site as the course page,
+    so in the Mumba app it is handled the same way the real learning-platform document is.<br><br>
+    <strong>To finish the course:</strong> read this, then go BACK to the course page and press "Mark as complete".
+  </div>
+
+  <p>1. We treat each other with respect and courtesy at all times.</p>
+  <p>2. We work safely and report hazards and incidents promptly.</p>
+  <p>3. We protect confidential information and personal data.</p>
+  <p>4. We act honestly and avoid conflicts of interest.</p>
+  <p>5. We comply with all applicable laws, policies and procedures.</p>
+  <p>6. We speak up if we see conduct that breaches this code.</p>
+  <p>7. We use company systems and equipment responsibly.</p>
+  <p>8. We support an inclusive workplace free from discrimination and harassment.</p>
+
+  <p style="margin-top:24px;"><strong>I have read and understood the Code of Conduct.</strong></p>
+
+  <button id="back">Try to go back to the course</button>
+  <button id="closeWin">Close this tab (window.close())</button>
+  <div id="status" class="muted"></div>
+
+  <p class="muted" style="margin-top:24px;">
+    On a desktop browser the buttons above work. Inside the Mumba app this is where the bug shows:
+    the app's Back button does nothing here, and the X closes the whole in-app browser instead of returning you to the course.
+  </p>
+
+<script>
+  document.getElementById('back').addEventListener('click', function () {
+    var s = document.getElementById('status');
+    if (window.history.length > 1) {
+      s.textContent = 'Calling history.back()…';
+      window.history.back();
+    } else {
+      s.textContent = 'No back history in this tab. In a normal browser you would switch tabs back to the course.';
+    }
+  });
+  document.getElementById('closeWin').addEventListener('click', function () {
+    var s = document.getElementById('status');
+    window.close();
+    // If still here after a moment, close() was refused (tab not script-opened as a child).
+    setTimeout(function () {
+      s.textContent = 'window.close() did not close this tab — it was not kept as a child of the course (this is the broken case).';
+    }, 400);
+  });
+</script>
+</body>
+</html>
