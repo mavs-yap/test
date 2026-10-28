@@ -9,9 +9,11 @@
   body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.6; max-width: 680px; }
   h1 { font-size: 1.25rem; }
   .note { background: #e8f0fe; color: #1a3d7c; padding: 12px; border-radius: 8px; margin: 14px 0; }
+  .trap { background: #fde7e9; color: #c5221f; padding: 12px; border-radius: 8px; margin: 14px 0; font-weight: 600; }
   button { font-size: 1rem; padding: 12px 16px; border-radius: 8px; border: 1px solid #0a66c2; background: #0a66c2; color: #fff; cursor: pointer; margin: 6px 0; }
   .muted { color: #666; font-size: .85rem; }
   p { margin: 10px 0; }
+  #backCount { font-weight: 700; }
 </style>
 </head>
 <body>
@@ -19,7 +21,14 @@
   <div class="note">
     This is the document that opens in a new tab from the course. It is hosted on the SAME site as the course page,
     so in the Mumba app it is handled the same way the real learning-platform document is.<br><br>
+    This page mimics the customer's eBook/SCORM reader: it manages its own browser history, so the app's Back
+    button becomes <strong>enabled but does nothing</strong> (it stays stuck on this page instead of returning to the course).<br><br>
     <strong>To finish the course:</strong> read this, then go BACK to the course page and press "Mark as complete".
+  </div>
+
+  <div class="trap">
+    Back-button taps captured by this page: <span id="backCount">0</span><br>
+    <span style="font-weight:400">Inside the Mumba app, pressing the in-app browser Back arrow increases this count but never leaves the page. That is the reported bug.</span>
   </div>
 
   <p>1. We treat each other with respect and courtesy at all times.</p>
@@ -38,24 +47,42 @@
   <div id="status" class="muted"></div>
 
   <p class="muted" style="margin-top:24px;">
-    On a desktop browser the buttons above work. Inside the Mumba app this is where the bug shows:
-    the app's Back button does nothing here, and the X closes the whole in-app browser instead of returning you to the course.
+    On a desktop browser you can still switch tabs back to the course. Inside the Mumba app this is where the bug shows:
+    the Back arrow is enabled but stuck here, and the X closes the whole in-app browser instead of returning you to the course.
   </p>
 
 <script>
+  // Mimic the customer's eBook/SCORM reader: seed extra history entries so the
+  // in-app browser's Back button is ENABLED (canGoBack() == true), then trap any
+  // back navigation so pressing Back never leaves this page. This reproduces the
+  // "back enabled but not working" symptom from the customer's video.
+  var backCount = 0;
+  var countEl = document.getElementById('backCount');
+
+  // Seed a few same-page history states (like a reader that pushState's per page/section).
+  try {
+    history.replaceState({ trap: 0 }, '', location.href);
+    for (var i = 1; i <= 3; i++) {
+      history.pushState({ trap: i }, '', location.href);
+    }
+  } catch (e) {}
+
+  // When the user presses Back, swallow it: re-push a state so we stay on this page.
+  window.addEventListener('popstate', function () {
+    backCount++;
+    countEl.textContent = String(backCount);
+    try { history.pushState({ trap: 'repush' }, '', location.href); } catch (e) {}
+  });
+
   document.getElementById('back').addEventListener('click', function () {
     var s = document.getElementById('status');
-    if (window.history.length > 1) {
-      s.textContent = 'Calling history.back()…';
-      window.history.back();
-    } else {
-      s.textContent = 'No back history in this tab. In a normal browser you would switch tabs back to the course.';
-    }
+    s.textContent = 'Calling history.back()… (watch the counter: it rises but the page does not leave)';
+    history.back();
   });
+
   document.getElementById('closeWin').addEventListener('click', function () {
     var s = document.getElementById('status');
     window.close();
-    // If still here after a moment, close() was refused (tab not script-opened as a child).
     setTimeout(function () {
       s.textContent = 'window.close() did not close this tab — it was not kept as a child of the course (this is the broken case).';
     }, 400);
