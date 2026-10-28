@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code of Conduct eBook (QA repro reader)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.6; max-width: 680px; }
+  h1 { font-size: 1.2rem; }
+  .trap { background: #fde7e9; color: #c5221f; padding: 12px; border-radius: 8px; margin: 14px 0; font-weight: 600; }
+  .note { background: #e8f0fe; color: #1a3d7c; padding: 12px; border-radius: 8px; margin: 14px 0; }
+  button { font-size: 1rem; padding: 12px 16px; border-radius: 8px; border: 1px solid #0a66c2; background: #0a66c2; color: #fff; cursor: pointer; margin: 6px 0; }
+  .muted { color: #666; font-size: .85rem; }
+  .page { background: #111; color: #fff; padding: 24px; border-radius: 10px; margin: 14px 0; }
+  #backCount { font-weight: 700; }
+</style>
+</head>
+<body>
+  <h1>Code of Conduct eBook</h1>
+  <div class="note">
+    You reached this eBook by a real navigation from the document, so the in-app browser now has history behind it
+    and its <strong>Back arrow is enabled</strong>. This page mimics the customer's eBook/SCORM reader: it manages
+    its own history, so pressing Back is <strong>swallowed and never returns you to the course</strong>.
+  </div>
+
+  <div class="trap">
+    Back-button taps captured by this eBook: <span id="backCount">0</span><br>
+    <span style="font-weight:400">On the Mumba app, pressing the enabled Back arrow increases this count but stays stuck on the eBook. That is the reported bug.</span>
+  </div>
+
+  <div class="page">
+    <strong>Bridgestone — Code of Conduct</strong><br><br>
+    "The larger a company grows, the greater its responsibilities to society."<br>
+    — Shojiro Ishibashi, Bridgestone Founder<br><br>
+    Page 2 of the eBook. In the real course this is where learners get stuck: Back does nothing, and the only way out is the X.
+  </div>
+
+  <p><strong>I have read and understood the Code of Conduct.</strong></p>
+  <button id="back">Try to go back to the course</button>
+  <button id="closeWin">Close this tab (window.close())</button>
+  <div id="status" class="muted"></div>
+
+  <p class="muted" style="margin-top:24px;">
+    Inside the Mumba app: the Back arrow is enabled but stuck here, and the X closes the whole in-app browser
+    instead of returning you to the course (progress lost).
+  </p>
+
+<script>
+  // Mimic the eBook/SCORM reader: seed same-page history states and swallow every
+  // back navigation, so the ENABLED Back arrow never unwinds to the course.
+  var backCount = 0;
+  var countEl = document.getElementById('backCount');
+
+  try {
+    history.replaceState({ trap: 0 }, '', location.href);
+    for (var i = 1; i <= 3; i++) { history.pushState({ trap: i }, '', location.href); }
+  } catch (e) {}
+
+  window.addEventListener('popstate', function () {
+    backCount++;
+    countEl.textContent = String(backCount);
+    try { history.pushState({ trap: 'repush' }, '', location.href); } catch (e) {}
+  });
+
+  document.getElementById('back').addEventListener('click', function () {
+    document.getElementById('status').textContent =
+      'Calling history.back()… (the counter rises but the eBook never leaves — same as the app Back arrow)';
+    history.back();
+  });
+
+  document.getElementById('closeWin').addEventListener('click', function () {
+    var s = document.getElementById('status');
+    window.close();
+    setTimeout(function () {
+      s.textContent = 'window.close() did not close this tab — it was not kept as a child of the course (broken case).';
+    }, 400);
+  });
+</script>
+</body>
+</html>
